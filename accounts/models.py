@@ -13,7 +13,6 @@ class CustomUser(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     school = models.ForeignKey('schools.School', null=True, blank=True, on_delete=models.SET_NULL, related_name='users')
-    is_approved = models.BooleanField(default=False)
     subjects = models.ManyToManyField('subjects.Subject', blank = True, related_name = 'teachers')
     is_email_verified = models.BooleanField(default=False)
 
