@@ -1,39 +1,37 @@
 from django.db import models
-from django.conf import settings
-from schools.models import ClassRoom
-from subjects.models import Subject
+from django.db.models import Avg
+from accounts.models import CustomUser
 from students.models import Student
+from subjects.models import Subject
+from schools.models import ClassRoom
 
-class Assessment(models.Model):
-    title = models.CharField(max_length=255)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='assessments')
-    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'role':'TEACHER'}, related_name='assessments')
-    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='assessments')
-    date = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-date', 'title']
-
-    def __str__(self):
-        return f'{self.title} ({self.subject.name})'
-
-class AssessmentResult(models.Model):
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name='results')
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='assessment_results')
-    score = models.DecimalField(max_digits=5, decimal_places=2)
-    feedback = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class DailyAssessment(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    score = models.FloatField()
+    note = models.TextField(blank=True)
+    date = models.DateField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('assessment', 'student')
-        ordering = ['student__last_name']
+        ordering = ['-date']
 
-    def __str__(self):
-        return f"{self.student} → {self.score}"
+class ExamAssessment(models.Model):
+    EXAM_TYPE_CHOICES = [
+        ('MS', 'Kiçik Summativ'),
+        ('BS', 'Böyük Summativ'),
+        ('YI', 'İllik Qiymət'),
+    ]
 
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    exam_type = models.CharField(max_length=2, choices=EXAM_TYPE_CHOICES)
+    score = models.FloatField()
+    date = models.DateField(auto_now_add=True)
 
-
-
-
-# Create your models here.
+    class Meta:
+        unique_together = ['student', 'subject', 'exam_type']
+        ordering = ['-date']

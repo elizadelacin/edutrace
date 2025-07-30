@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',
     'rest_framework_simplejwt',
-    'accounts','schools','students','homeworks','assessments','feedbacks','notifications', 'subjects',
+    'accounts','schools','students','homeworks','assessments','feedbacks','notifications', 'subjects', 'announcements', 'attendance', 'schedule'
 
 ]
 

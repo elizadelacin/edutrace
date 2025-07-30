@@ -1,18 +1,14 @@
 from rest_framework import serializers
-from .models import Assessment, AssessmentResult
+from .models import DailyAssessment, ExamAssessment
 
-class AssessmentResultSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='student.__str__', read_only=True)
-
+class DailyAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AssessmentResult
-        fields = ['id', 'student', 'student_name', 'score', 'feedback', 'created_at']
-        read_only_fields = ['id', 'created_at', 'student_name']
+        model = DailyAssessment
+        fields = '__all__'
+        read_only_fields = ['teacher', 'date']
 
-class AssessmentSerializer(serializers.ModelSerializer):
-    results = AssessmentResultSerializer(many=True, read_only=True)
-
+class ExamAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Assessment
-        fields = ['id', 'title', 'subject', 'teacher', 'classroom', 'date', 'created_at', 'results']
-        read_only_fields = ['id', 'teacher', 'created_at']
+        model = ExamAssessment
+        fields = '__all__'
+        read_only_fields = ['teacher', 'date']

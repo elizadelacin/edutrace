@@ -1,19 +1,38 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer, RegisterSerializer, CustomTokenSerializer
+from .models import Invitation
+from .serializers import UserSerializer, RegisterSerializer, CustomTokenSerializer, InvitationSerializer
 from .permissions import IsSelfOrAdmin
 from .tasks import send_activation_email
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
 User = get_user_model()
+
+class InvitationViewSet(viewsets.ModelViewSet):
+    queryset = Invitation.objects.all()
+    serializer_class = InvitationSerializer
+    permission_classes = [IsAdminUser]
+
+    def perform_create(self, serializer):
+        invitation = serializer.save()
+        from .tasks import send_invitation_email
+        send_invitation_email.delay(invitation.id)
+
+    def update(self, request, *args, **kwargs):
+        # Update (PUT/PATCH) qadağandır — admin yalnız yaradıb, sonra email göndərir
+        return Response({"detail": "Invitation update is not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
 
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -24,6 +43,8 @@ class AccountViewSet(viewsets.ModelViewSet):
             return [AllowAny()]
         elif self.action in ['retrieve', 'update', 'partial_update']:
             return [IsAuthenticated(), IsSelfOrAdmin()]
+        elif self.action in ['teachers', 'parents']:
+            return [IsAuthenticated(), IsAdminUser()]
         return [IsAuthenticated()]
 
     @action(detail=False, methods=['post'])
@@ -52,3 +73,15 @@ class AccountViewSet(viewsets.ModelViewSet):
             return HttpResponse("Email verified.")
         else:
             return HttpResponse("Invalid or expired activation link.", status=400)
+
+    @action(detail=False, methods=['get'])
+    def teachers(self, request):
+        teachers = User.objects.filter(role='TEACHER')
+        serializer = self.get_serializer(teachers, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def parents(self, request):
+        parents = User.objects.filter(role='PARENT')
+        serializer = self.get_serializer(parents, many=True)
+        return Response(serializer.data)

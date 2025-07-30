@@ -12,6 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'role', 'school', 'is_email_verified',)
         read_only_fields = ('is_email_verified', 'role')
 
+class InvitationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invitation
+        fields = '__all__'
+
 class RegisterSerializer(serializers.ModelSerializer):
     invite_code = serializers.CharField(write_only=True)
 

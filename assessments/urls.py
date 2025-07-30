@@ -1,10 +1,10 @@
-from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import AssessmentViewSet, AssessmentResultViewSet
+from rest_framework.routers import DefaultRouter
+from .views import DailyAssessmentViewSet, ExamAssessmentViewSet
 
 router = DefaultRouter()
-router.register(r'assessments', AssessmentViewSet, basename='assessments')
-router.register(r'results', AssessmentResultViewSet, basename='assessment-results')
+router.register('daily', DailyAssessmentViewSet, basename='daily-assessments')
+router.register('exam', ExamAssessmentViewSet, basename='exam-assessments')
 
 urlpatterns = [
     path('', include(router.urls)),
