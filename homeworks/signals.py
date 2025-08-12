@@ -1,15 +1,21 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Homework
-from students.models import Student
 from notifications.utils import dispatch_notification
+from .models import Homework
+from notifications.signals import register_delete_signal
 
 @receiver(post_save, sender=Homework)
 def homework_created(sender, instance, created, **kwargs):
     if created:
-        dispatch_notification(
-            title="Yeni Ev Tapşırığı",
-            message=f"{instance.teacher.get_full_name()} müəllimi yeni ev tapşırığı əlavə etdi.",
-            created_by=instance.teacher,
-            target_group='PARENTS',
+        message = (
+            f"Yeni Ev Tapşırığı: {instance.teacher.get_full_name()} müəllimi "
+            f"{instance.classroom.name} sinfi üçün {instance.subject.name} fənnindən yeni tapşırıq əlavə etdi."
         )
+        dispatch_notification(
+            message=message,
+            target_group='PARENT',
+            instance=instance
+        )
+
+register_delete_signal(Homework)
+

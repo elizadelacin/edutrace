@@ -1,11 +1,18 @@
-from .models import Notification
+from .tasks import create_user_notifications
 
-def dispatch_notification(title, message, created_by, target_group=None, target_user=None):
-    notification = Notification.objects.create(
-        title=title,
-        message=message,
-        created_by=created_by,
-        target_group=target_group or ('USER' if target_user else 'ALL'),
-        target_user=target_user if target_user else None,
+def dispatch_notification(message, target_group=None, target_user_id=None, instance=None):
+
+    model_name = None
+    object_id = None
+
+    if instance:
+        model_name = instance.__class__.__name__
+        object_id = instance.id
+
+    create_user_notifications.delay(
+        message,
+        target_group,
+        target_user_id,
+        model_name,
+        object_id
     )
-    return notification

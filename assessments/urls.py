@@ -7,5 +7,5 @@ router.register('daily', DailyAssessmentViewSet, basename='daily-assessments')
 router.register('exam', ExamAssessmentViewSet, basename='exam-assessments')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('assessments/', include(router.urls)),
 ]

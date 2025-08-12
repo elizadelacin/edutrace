@@ -9,6 +9,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from .tokens import password_reset_token_generator
 
 @shared_task
 def send_activation_email(user_id):
@@ -28,3 +29,17 @@ def send_invitation_email(invitation_id):
     subject = f"{invitation.role} invitation to EduTrace"
     body = f"Use this invite code to register: {invitation.code}"
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [invitation.email])
+@shared_task
+def send_password_reset_email(user_id):
+    user = CustomUser.objects.get(pk=user_id)
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    token = password_reset_token_generator.make_token(user)
+    link = f"{settings.SITE_URL}{reverse('accounts-password-reset-confirm', args=[uidb64, token])}"
+
+    subject = "Password Reset Requested"
+    html_content = render_to_string('accounts/email/password_reset.html', {'user': user, 'link': link})
+    text_content = strip_tags(html_content)
+
+    email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [user.email])
+    email.attach_alternative(html_content, "text/html")
+    email.send()

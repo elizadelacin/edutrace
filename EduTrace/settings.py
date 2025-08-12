@@ -28,8 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_results',
     'drf_yasg',
+    'django_extensions',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'accounts','schools','students','homeworks','assessments','feedbacks','notifications', 'subjects', 'announcements', 'attendance', 'schedule'
 
 ]

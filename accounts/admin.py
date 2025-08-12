@@ -4,6 +4,7 @@ from .tasks import send_invitation_email
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
+    search_fields = ['email', 'first_name', 'last_name']
     list_display = ('username', 'email', 'role', 'is_email_verified', )
     list_filter = ('role', 'is_email_verified', )
 

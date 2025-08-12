@@ -1,15 +1,32 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class IsTeacherOrAdmin(BasePermission):
+class IsAuthenticatedAndRelated(BasePermission):
+
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role in ['TEACHER', 'ADMIN']
+        user = request.user
+        if not user.is_authenticated:
+            return False
 
-class IsRelatedParent(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.user.role == 'ADMIN':
+        # Valideynlər yalnız oxuya bilər
+        if user.role == 'PARENT':
+            return request.method in SAFE_METHODS
+
+        # Müəllim və Admin hərəkət edə bilər
+        if user.role in ['TEACHER', 'ADMIN']:
             return True
-        if request.user.role == 'TEACHER':
-            return obj.teacher == request.user
-        if request.user.role == 'PARENT':
-            return obj.student.parent == request.user
+
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if user.role == 'ADMIN':
+            return True
+
+        if user.role == 'TEACHER':
+            return obj.teacher == user
+
+        if user.role == 'PARENT':
+            return obj.student.parent == user
+
         return False

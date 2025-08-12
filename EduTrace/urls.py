@@ -20,7 +20,7 @@ urlpatterns = [
     path('api/', include('schools.urls')),
     path('api/', include('students.urls')),
     path('api/', include('subjects.urls')),
-    path('api/assessments/', include('assessments.urls')),
+    path('api/', include('assessments.urls')),
     path('api/', include('homeworks.urls')),
     path('api/', include('feedbacks.urls')),
     path('api/', include('attendance.urls')),

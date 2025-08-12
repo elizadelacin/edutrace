@@ -2,21 +2,12 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Student
 from .serializers import StudentSerializer
-from .permissions import IsAdminOrTeacherOfSchool, IsParentOfStudent
+from .permissions import IsAdmin, IsTeacherOfClassroom, IsParentOfStudent
 
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.select_related('school', 'classroom', 'parent').all()
     serializer_class = StudentSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'create']:
-            # List və Create: ADMIN və TEACHER
-            return [IsAuthenticated(), IsAdminOrTeacherOfSchool()]
-        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            if self.request.user.role == 'PARENT':
-                return [IsAuthenticated(), IsParentOfStudent()]
-            return [IsAuthenticated(), IsAdminOrTeacherOfSchool()]
-        return [IsAuthenticated()]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -28,6 +19,22 @@ class StudentViewSet(viewsets.ModelViewSet):
             return Student.objects.filter(parent=user)
         return Student.objects.none()
 
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticated(), IsAdmin()]
+        if self.action in ['list']:
+            if self.request.user.role == 'ADMIN':
+                return [IsAuthenticated(), IsAdmin()]
+            elif self.request.user.role == 'TEACHER':
+                return [IsAuthenticated(), IsTeacherOfClassroom()]
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+            if self.request.user.role == 'PARENT':
+                return [IsAuthenticated(), IsParentOfStudent()]
+            elif self.request.user.role == 'TEACHER':
+                return [IsAuthenticated(), IsTeacherOfClassroom()]
+            elif self.request.user.role == 'ADMIN':
+                return [IsAuthenticated(), IsAdmin()]
+        return [IsAuthenticated()]
+
     def perform_create(self, serializer):
-        # Yaradılan şagird avtomatik user.school ilə əlaqələnir
         serializer.save(school=self.request.user.school)

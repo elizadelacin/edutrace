@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
@@ -13,6 +14,11 @@ from .permissions import IsSelfOrAdmin
 from .tasks import send_activation_email
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from rest_framework.permissions import AllowAny
+from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .models import CustomUser
+from .tasks import send_password_reset_email
+
 
 User = get_user_model()
 
@@ -85,3 +91,32 @@ class AccountViewSet(viewsets.ModelViewSet):
         parents = User.objects.filter(role='PARENT')
         serializer = self.get_serializer(parents, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    def password_reset_request(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        user = CustomUser.objects.get(email=email)
+        send_password_reset_email.delay(user.pk)
+        return Response({"detail": "Password reset link sent to your email."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny],
+            url_path='password-reset-confirm/(?P<uidb64>[^/.]+)/(?P<token>[^/.]+)')
+    def password_reset_confirm(self, request, uidb64=None, token=None):
+        data = request.data.copy()
+        data.update({'uidb64': uidb64, 'token': token})
+        serializer = PasswordResetConfirmSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        try:
+            refresh_token = request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"detail": "Logout successful."}, status=200)
+        except Exception:
+            return Response({"detail": "Invalid refresh token."}, status=400)

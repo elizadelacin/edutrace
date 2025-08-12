@@ -12,7 +12,7 @@ class Announcement(models.Model):
     message = models.TextField()
     target_group = models.CharField(max_length=20, choices=TARGET_CHOICES, default='ALL')
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='announcements')
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='announcements')
 
     def __str__(self):
         return self.title

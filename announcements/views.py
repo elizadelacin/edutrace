@@ -4,7 +4,7 @@ from .serializers import AnnouncementSerializer
 from .permissions import IsAdminOrReadOnly
 
 class AnnouncementViewSet(viewsets.ModelViewSet):
-    queryset = Announcement.objects.all().order_by('-created_at')
+    queryset = Announcement.objects.all().select_related('created_by').order_by('-created_at')
     serializer_class = AnnouncementSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -25,3 +25,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        # Created_by dəyişməməlidir
+        serializer.save()

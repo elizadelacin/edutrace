@@ -19,12 +19,6 @@ class ClassRoom(models.Model):
         on_delete=models.CASCADE,
         related_name='classrooms'
     )
-    teachers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        limit_choices_to={'role': 'TEACHER'},
-        related_name='teaching_classrooms',
-        blank=True
-    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -33,3 +27,20 @@ class ClassRoom(models.Model):
 
     def __str__(self):
         return f"{self.school.name} – {self.name}"
+
+class TeachingAssignment(models.Model):
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE, related_name='teaching_assignments')
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'TEACHER'},
+        related_name='teaching_assignments'
+    )
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='teaching_assignments')
+
+    class Meta:
+        unique_together = ('classroom', 'teacher', 'subject')
+        ordering = ['classroom__school__name', 'classroom__name', 'subject__name']
+
+    def __str__(self):
+        return f"{self.classroom} - {self.subject.name} - {self.teacher.get_full_name()}"

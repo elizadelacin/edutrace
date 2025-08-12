@@ -2,12 +2,12 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Schedule
 from .serializers import ScheduleSerializer
-from .permissions import IsAdminOrRelatedTeacherOrParent
+from .permissions import IsAdminOrReadOnly
 
 class ScheduleViewSet(viewsets.ModelViewSet):
     queryset = Schedule.objects.all()
     serializer_class = ScheduleSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrRelatedTeacherOrParent]
+    permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
