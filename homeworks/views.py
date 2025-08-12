@@ -5,6 +5,8 @@ from .models import Homework
 from .serializers import HomeworkSerializer
 from .permissions import IsAdminOrTeacherOrParentReadOnly
 from students.models import Student
+from schools.models import TeachingAssignment
+
 
 class HomeworkViewSet(viewsets.ModelViewSet):
     queryset = Homework.objects.all().order_by('-created_at')
@@ -33,9 +35,11 @@ class HomeworkViewSet(viewsets.ModelViewSet):
         subject = serializer.validated_data['subject']
 
         if teacher.role == 'TEACHER':
-            if teacher not in classroom.teachers.all():
-                raise PermissionDenied("Bu sinif üçün tapşırıq əlavə etmək icazəniz yoxdur.")
-            if subject.teacher != teacher:
-                raise PermissionDenied("Bu fənn üzrə tapşırıq əlavə etmək icazəniz yoxdur.")
+            if not TeachingAssignment.objects.filter(
+                    classroom=classroom,
+                    teacher=teacher,
+                    subject=subject
+            ).exists():
+                raise PermissionDenied("Bu sinif və fənn üzrə tapşırıq əlavə etmək icazəniz yoxdur.")
 
         serializer.save(teacher=teacher)

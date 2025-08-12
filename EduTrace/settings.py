@@ -32,8 +32,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'accounts','schools','students','homeworks','assessments','feedbacks','notifications', 'subjects', 'announcements', 'attendance', 'schedule'
-
+    'accounts','schools','students','homeworks','assessments','feedbacks','notifications', 'subjects', 'announcements', 'attendance', 'schedule',
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -104,6 +104,18 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
+}
+
+ASGI_APPLICATION = "EduTrace.asgi.application"
+
+# Redis WebSocket backend
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 # Password validation

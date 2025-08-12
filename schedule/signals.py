@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from .models import Schedule
-from notifications.utils import dispatch_notification
-from notifications.signals import register_delete_signal
+from notifications.signals import dispatch_notification, register_delete_signal
+from accounts.models import CustomUser
 
 @receiver(post_save, sender=Schedule)
 def schedule_changed(sender, instance, created, **kwargs):
@@ -11,16 +11,22 @@ def schedule_changed(sender, instance, created, **kwargs):
     else:
         message = f"{instance.classroom.name} sinifinin dərs cədvəlində dəyişiklik edildi."
 
-    dispatch_notification(
-        message=message,
-        target_group='TEACHER',
-        instance=instance,
-    )
-    dispatch_notification(
-        message=message,
-        target_group='PARENT',
-        instance=instance,
-    )
+    # Müəllimlərə bildiriş
+    teachers = CustomUser.objects.filter(role='TEACHER')
+    for teacher in teachers:
+        dispatch_notification(
+            user_id=teacher.id,
+            message=message,
+            content_object=instance
+        )
+
+    # Valideynlərə bildiriş
+    parents = CustomUser.objects.filter(role='PARENT')
+    for parent in parents:
+        dispatch_notification(
+            user_id=parent.id,
+            message=message,
+            content_object=instance
+        )
 
 register_delete_signal(Schedule)
-

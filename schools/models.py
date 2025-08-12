@@ -19,6 +19,12 @@ class ClassRoom(models.Model):
         on_delete=models.CASCADE,
         related_name='classrooms'
     )
+    teachers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        limit_choices_to={'role': 'TEACHER'},
+        related_name='classrooms',
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

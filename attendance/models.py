@@ -3,6 +3,7 @@ from schools.models import ClassRoom
 from students.models import Student
 from subjects.models import Subject
 from accounts.models import CustomUser
+from datetime import date
 
 class Attendance(models.Model):
     PRESENT = 'PRESENT'
@@ -17,7 +18,7 @@ class Attendance(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
     classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField(default=date.today)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
     class Meta:

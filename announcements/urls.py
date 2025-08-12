@@ -3,7 +3,7 @@ from .views import AnnouncementViewSet
 from django.urls import path, include
 
 router = DefaultRouter()
-router.register('', AnnouncementViewSet, basename='announcements')
+router.register(r'announcements', AnnouncementViewSet, basename='announcements')
 
 urlpatterns = [
     path('', include(router.urls)),
