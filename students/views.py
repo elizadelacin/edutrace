@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 from .models import Student
 from .serializers import StudentSerializer
 from .permissions import IsAdmin, IsTeacherOfClassroom, IsParentOfStudent
@@ -37,4 +38,13 @@ class StudentViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
-        serializer.save(school=self.request.user.school)
+        user_school = self.request.user.school
+        classroom = serializer.validated_data['classroom']
+
+        # Classroom-un school-un user-in school ilə eyni olub-olmamasını yoxlayırıq
+        if classroom.school != user_school:
+            raise ValidationError("This classroom does not belong to your school.")
+
+        # Student-i yaratarkən school-u avtomatik təyin edirik
+        serializer.save(school=user_school)
+

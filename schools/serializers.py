@@ -10,7 +10,7 @@ class SchoolSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class ClassRoomSerializer(serializers.ModelSerializer):
-    school = serializers.PrimaryKeyRelatedField(read_only=True)
+    school = serializers.PrimaryKeyRelatedField(queryset=School.objects.all())
 
     class Meta:
         model = ClassRoom

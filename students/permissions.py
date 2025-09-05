@@ -5,8 +5,7 @@ class IsAdmin(BasePermission):
         return request.user.is_authenticated and request.user.role == 'ADMIN'
 
     def has_object_permission(self, request, view, obj):
-        return obj.school == request.user.school
-
+        return request.user.role == 'ADMIN'
 
 class IsTeacherOfClassroom(BasePermission):
     def has_permission(self, request, view):
@@ -17,7 +16,6 @@ class IsTeacherOfClassroom(BasePermission):
             obj.school == request.user.school and
             obj.classroom in request.user.teaching_classrooms.all()
         )
-
 
 class IsParentOfStudent(BasePermission):
     def has_permission(self, request, view):
